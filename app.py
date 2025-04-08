@@ -1,6 +1,11 @@
 import gradio as gr
 from experiments.otsu_segmenter import generate_segmented_image
+from experiments.kmeans_segmenter import generate_kmeans_segmented_image
 from PIL import Image
+
+def generate_kmeans(image_path,k):
+    kmeans_image_output, kmeans_segmented_image_output,_,kmeans_threshold_text=generate_kmeans_segmented_image(image_path, k)
+    return kmeans_image_output, kmeans_segmented_image_output, kmeans_threshold_text
 
 with gr.Blocks() as demo:
     gr.Markdown("# Image Segmentation using Classical CV")
@@ -26,18 +31,24 @@ with gr.Blocks() as demo:
                 outputs=[image_output, segmented_image_output, opencv_segmented_image_output, histogram_output, threshold_text]
             )
         # Tab 2: GCN+GRU
-        with gr.TabItem("GCN+GRU"):
+        with gr.TabItem("K-means Segmentation"):
             with gr.Row():
                 with gr.Column(scale=1):
-                    gcn_gru_file_input = gr.File(label="Upload PLY File")
-                    gcn_gru_display_btn = gr.Button("Display Point Cloud and Generate Caption")
-                    gcn_gru_view_only_btn = gr.Button("Display Point Cloud Only")
-                    gcn_gru_status_text = gr.Textbox(label="Status", value="Ready to load point cloud", interactive=False)
+                    kmeans_file_input = gr.File(label="Upload Image File")
+                    kmeans_k_value = gr.Slider(minimum=2, maximum=10, value=3, step=1, label="Number of Clusters (K)")
+                    kmeans_display_btn = gr.Button("Segment this image")
+                    kmeans_threshold_text = gr.Textbox(label="K-means Info", value="", interactive=False)
                 
                 with gr.Column(scale=2):
-                    gcn_gru_plot_output = gr.Plot(label="Point Cloud Visualization", container=False)
-                    gcn_gru_caption_output = gr.Textbox(label="Generated Caption", interactive=False)
+                    kmeans_image_output = gr.Image(label="Original Image", container=False)
+                    kmeans_segmented_image_output = gr.Image(label="K-means Segmented Image", container=False)
             
+            # Connect buttons to function
+            kmeans_display_btn.click(
+                fn=generate_kmeans,
+                inputs=[kmeans_file_input, kmeans_k_value],
+                outputs=[kmeans_image_output, kmeans_segmented_image_output, kmeans_threshold_text]
+        )
             
         # Tab 3: ViT+Transformer
         with gr.TabItem("ViT+Transformer"):
