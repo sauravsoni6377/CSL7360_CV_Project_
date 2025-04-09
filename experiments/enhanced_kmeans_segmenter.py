@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 from PIL import Image
 
-def slic_kmeans(image, K=100, m=10, max_iter=10):
+def slic_kmeans(image_path, K=100, m=10, max_iter=10):
     """
     Perform superpixel segmentation using enhanced K-means with LAB+XY.
     Args:
@@ -16,6 +16,8 @@ def slic_kmeans(image, K=100, m=10, max_iter=10):
         segmented_img: The segmented image with cluster colors.
         labels: Cluster label for each pixel.
     """
+    jpg_image = Image.open(image_path)
+    image = np.array(jpg_image)
     h, w = image.shape[:2]
     S = int(np.sqrt(h * w / K))  # grid interval
 
@@ -76,23 +78,23 @@ def slic_kmeans(image, K=100, m=10, max_iter=10):
         rgb_pixel = cv2.cvtColor(lab_pixel, cv2.COLOR_LAB2RGB)[0][0]
         segmented_img[i // w, i % w] = rgb_pixel
 
-    return Image.fromarray(segmented_img), labels.reshape((h, w)), centers
+    return jpg_image, Image.fromarray(segmented_img), labels.reshape((h, w)), centers
 
-img_path = "/home/akshat/projects/CSL7360_Project/bird.jpeg"
-image = cv2.imread(img_path)
-image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+# img_path = "/home/akshat/projects/CSL7360_Project/bird.jpeg"
+# image = cv2.imread(img_path)
+# image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
 
-seg_img, labels, centers = slic_kmeans(image, K=200, m=20)
-seg_img.save("enhaned_kmeans_segmented.png")
-plt.figure(figsize=(10, 5))
-plt.subplot(1, 2, 1)
-plt.imshow(image)
-plt.title("Original Image")
-plt.axis("off")
+# _,seg_img, labels, centers = slic_kmeans(image, K=2, m=20)
+# seg_img.save("enhaned_kmeans_segmented.png")
+# plt.figure(figsize=(10, 5))
+# plt.subplot(1, 2, 1)
+# plt.imshow(image)
+# plt.title("Original Image")
+# plt.axis("off")
 
-plt.subplot(1, 2, 2)
-plt.imshow(seg_img)
-plt.title("SLIC-like K-Means Segmentation")
-plt.axis("off")
-plt.tight_layout()
-plt.show()
+# plt.subplot(1, 2, 2)
+# plt.imshow(seg_img)
+# plt.title("SLIC-like K-Means Segmentation")
+# plt.axis("off")
+# plt.tight_layout()
+# plt.show()
