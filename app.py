@@ -162,5 +162,5 @@ with gr.Blocks() as demo:
                 outputs=[segnet_image_output,segnet_segmented_image_output]
         )
 if __name__ == "__main__":
-    demo.launch(server_name="172.31.100.127")
+    demo.launch()
 
