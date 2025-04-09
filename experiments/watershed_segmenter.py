@@ -4,7 +4,6 @@ import heapq
 import matplotlib.pyplot as plt
 from collections import deque
 
-
 # 1. Compute local minima as markers
 def get_local_minima(gray):
     kernel = np.ones((3, 3), np.uint8)
