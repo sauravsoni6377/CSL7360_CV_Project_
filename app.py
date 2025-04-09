@@ -3,6 +3,11 @@ from experiments.otsu_segmenter import generate_segmented_image
 from experiments.kmeans_segmenter import generate_kmeans_segmented_image
 from experiments.enhanced_kmeans_segmenter import slic_kmeans
 from experiments.watershed_segmenter import generate_watershed
+from experiments.felzenszwalb_segmentation import segment
+import numpy as np
+from glob import glob
+from PIL import Image
+from matplotlib import pyplot as plt
 from PIL import Image
 
 def generate_kmeans(image_path,k):
@@ -12,6 +17,14 @@ def generate_kmeans(image_path,k):
 def generate_slic(image_path,k,m,max_iter):
     image,seg_img, labels, centers = slic_kmeans(image_path, K=k, m=m, max_iter=max_iter)
     return image,seg_img
+
+def generate_felzenszwalb(image_path, sigma, k, min_size_factor):
+    image = Image.open(image_path).convert("RGB")
+    image_np = np.array(image)
+    segments_fz = segment(image_np, sigma=sigma, k=k, min_size=min_size_factor)
+    segments_fz = segments_fz.astype(np.uint8)
+    
+    return image, segments_fz
 
 with gr.Blocks() as demo:
     gr.Markdown("# Image Segmentation using Classical CV")
@@ -90,6 +103,25 @@ with gr.Blocks() as demo:
                 fn=generate_watershed,
                 inputs=[watershed_file_input],
                 outputs=[watershed_image_output,watershed_segmented_image_output]
+        )
+        with gr.TabItem("Felzenszwalb Algorithm Segmentation"):
+            with gr.Row():
+                with gr.Column(scale=1):
+                    felzenszwalb_file_input = gr.File(label="Upload Image File")
+                    sigma_value = gr.Slider(minimum=0, maximum=1, value=0.2, step=0.1, label="Sigma")
+                    K_value = gr.Slider(minimum=2, maximum=1000, value=2, step=1, label="K value")
+                    min_size_value = gr.Slider(minimum=0, maximum=100, value=50, step=1, label="Min Size Factor")
+                    felzenszwalb_display_btn = gr.Button("Segment this image")
+                
+                with gr.Column(scale=2):
+                    felzenszwalb_image_output = gr.Image(label="Original Image", container=False)
+                    felzenszwalb_segmented_image_output = gr.Image(label="felzenszwalb Segmented Image", container=False)
+            
+            # Connect buttons to function
+            felzenszwalb_display_btn.click(
+                fn=generate_felzenszwalb,
+                inputs=[felzenszwalb_file_input,sigma_value,K_value,min_size_value],
+                outputs=[felzenszwalb_image_output,felzenszwalb_segmented_image_output]
         )
 if __name__ == "__main__":
     demo.launch(server_name="172.31.100.127")
