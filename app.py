@@ -5,9 +5,6 @@ from experiments.enhanced_kmeans_segmenter import slic_kmeans
 from experiments.watershed_segmenter import generate_watershed
 from experiments.felzenszwalb_segmentation import segment
 import numpy as np
-from glob import glob
-from PIL import Image
-from matplotlib import pyplot as plt
 from PIL import Image
 
 def generate_kmeans(image_path,k):
@@ -30,7 +27,6 @@ with gr.Blocks() as demo:
     gr.Markdown("# Image Segmentation using Classical CV")
     
     with gr.Tabs() as tabs:
-        # Tab 1: CNN+LSTM
         with gr.TabItem("Otsu's Method"):
             with gr.Row():
                 with gr.Column(scale=1):
@@ -43,13 +39,11 @@ with gr.Blocks() as demo:
                     histogram_output = gr.Image(label="Histogram", container=False)
                     segmented_image_output = gr.Image(label="Our Segmented Image", container=False)
                     opencv_segmented_image_output = gr.Image(label="OpenCV Segmented Image", container=False)
-            # Connect buttons to functions
             display_btn.click(
                 fn=generate_segmented_image,
                 inputs=file_input,
                 outputs=[image_output, segmented_image_output, opencv_segmented_image_output, histogram_output, threshold_text]
             )
-        # Tab 2: GCN+GRU
         with gr.TabItem("K-means Segmentation"):
             with gr.Row():
                 with gr.Column(scale=1):
@@ -62,7 +56,6 @@ with gr.Blocks() as demo:
                     kmeans_image_output = gr.Image(label="Original Image", container=False)
                     kmeans_segmented_image_output = gr.Image(label="K-means Segmented Image", container=False)
             
-            # Connect buttons to function
             kmeans_display_btn.click(
                 fn=generate_kmeans,
                 inputs=[kmeans_file_input, kmeans_k_value],
@@ -81,7 +74,6 @@ with gr.Blocks() as demo:
                     slic_image_output = gr.Image(label="Original Image", container=False)
                     slic_segmented_image_output = gr.Image(label="SLIC Segmented Image", container=False)
             
-            # Connect buttons to function
             slic_display_btn.click(
                 fn=generate_slic,
                 inputs=[slic_file_input, slic_k_value,slic_m_value,slic_max_iter_value],
@@ -98,7 +90,6 @@ with gr.Blocks() as demo:
                     watershed_image_output = gr.Image(label="Original Image", container=False)
                     watershed_segmented_image_output = gr.Image(label="watershed Segmented Image", container=False)
             
-            # Connect buttons to function
             watershed_display_btn.click(
                 fn=generate_watershed,
                 inputs=[watershed_file_input],
@@ -117,7 +108,6 @@ with gr.Blocks() as demo:
                     felzenszwalb_image_output = gr.Image(label="Original Image", container=False)
                     felzenszwalb_segmented_image_output = gr.Image(label="felzenszwalb Segmented Image", container=False)
             
-            # Connect buttons to function
             felzenszwalb_display_btn.click(
                 fn=generate_felzenszwalb,
                 inputs=[felzenszwalb_file_input,sigma_value,K_value,min_size_value],
