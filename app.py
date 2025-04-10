@@ -7,17 +7,29 @@ from experiments.enhanced_kmeans_segmenter import slic_kmeans
 from experiments.watershed_segmenter import generate_watershed
 from experiments.felzenszwalb_segmentation import segment
 from experiments.SegNet.efficient_b0_backbone.architecture import SegNetEfficientNet, NUM_CLASSES, DEVICE, IMAGE_SIZE
+from experiments.SegNet.vgg_backbone.model import SegNet
 import numpy as np
 from PIL import Image
 from matplotlib import cm
 import gdown
+import os
 
-segnet_vgg_weights = "https://drive.google.com/file/d/1EFXKQ_3bDW9FbZCqOLdrE0DOI0V4W82o/view?usp=sharing"
-gdown.download(segnet_vgg_weights,"segnet_vgg.pth", fuzzy=True)
+# Check if the saved_models directory exists, if not create it
+if not os.path.exists("saved_models"):
+    os.makedirs("saved_models")
+
+# Check if the model file already exists before downloading
+if not os.path.exists("saved_models/segnet_vgg.pth"):
+    print("Downloading SegNet VGG weights...")
+    segnet_vgg_weights = "https://drive.google.com/file/d/1EFXKQ_3bDW9FbZCqOLdrE0DOI0V4W82o/view?usp=sharing"
+    gdown.download(segnet_vgg_weights, "saved_models/segnet_vgg.pth", fuzzy=True)
+    print("Download complete!")
+else:
+    print("SegNet VGG weights already exist, skipping download.")
 
 def generate_segnet_vgg(image_path):
     model = SegNet(32).to(DEVICE)
-    model.load_state_dict(torch.load("segnet_vgg.pth", map_location=DEVICE))
+    model.load_state_dict(torch.load("saved_models/segnet_vgg.pth", map_location=DEVICE))
     # Set model to evaluation mode
     model.eval()
     
@@ -50,10 +62,6 @@ def generate_segnet_vgg(image_path):
     segmented_image = segmented_image.resize(original_image.size, Image.NEAREST)
     
     return original_image, segmented_image
-
-
-    
-    
 
 def generate_kmeans(image_path,k):
     kmeans_image_output, kmeans_segmented_image_output,_,kmeans_threshold_text=generate_kmeans_segmented_image(image_path, k)
@@ -202,6 +210,21 @@ with gr.Blocks() as demo:
             
             segnet_display_btn.click(
                 fn=SegNet_efficient_b0,
+                inputs=[segnet_file_input],
+                outputs=[segnet_image_output,segnet_segmented_image_output]
+        )
+        with gr.TabItem("SegNet VGG Segmentation"):
+            with gr.Row():
+                with gr.Column(scale=1):
+                    segnet_file_input = gr.File(label="Upload Image File")
+                    segnet_display_btn = gr.Button("Segment this image")
+                
+                with gr.Column(scale=2):
+                    segnet_image_output = gr.Image(label="Original Image", container=False)
+                    segnet_segmented_image_output = gr.Image(label="SegNet VGG Segmented Image", container=False)
+            
+            segnet_display_btn.click(
+                fn=generate_segnet_vgg,
                 inputs=[segnet_file_input],
                 outputs=[segnet_image_output,segnet_segmented_image_output]
         )
