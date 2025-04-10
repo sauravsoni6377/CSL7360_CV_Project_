@@ -10,6 +10,50 @@ from experiments.SegNet.efficient_b0_backbone.architecture import SegNetEfficien
 import numpy as np
 from PIL import Image
 from matplotlib import cm
+import gdown
+
+segnet_vgg_weights = "https://drive.google.com/file/d/1EFXKQ_3bDW9FbZCqOLdrE0DOI0V4W82o/view?usp=sharing"
+gdown.download(segnet_vgg_weights,"segnet_vgg.pth", fuzzy=True)
+
+def generate_segnet_vgg(image_path):
+    model = SegNet(32).to(DEVICE)
+    model.load_state_dict(torch.load("segnet_vgg.pth", map_location=DEVICE))
+    # Set model to evaluation mode
+    model.eval()
+    
+    # Load and preprocess the image
+    image = Image.open(image_path).convert('RGB')
+    original_image = image.copy()
+    
+    # Apply same preprocessing as during training
+    transform = transforms.Compose([
+        transforms.Resize((224, 224)),  # Adjust size to match your model's expected input
+        transforms.ToTensor(),
+        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
+    ])
+    
+    input_tensor = transform(image).unsqueeze(0).to(DEVICE)
+    
+    # Get prediction
+    with torch.no_grad():
+        output = model(input_tensor)
+        pred_mask = torch.argmax(output, dim=1).squeeze(0).cpu().numpy()
+    
+    # Convert prediction to visualization
+    # Option 1: Use a colormap for visualization
+    colormap = cm.get_cmap('nipy_spectral')
+    colored_mask = colormap(pred_mask / (pred_mask.max() or 1))  # Normalize, handle case where max is 0
+    colored_mask = (colored_mask[:, :, :3] * 255).astype(np.uint8)  # Drop alpha and convert to uint8
+    segmented_image = Image.fromarray(colored_mask)
+    
+    # Resize segmented image to match original image size
+    segmented_image = segmented_image.resize(original_image.size, Image.NEAREST)
+    
+    return original_image, segmented_image
+
+
+    
+    
 
 def generate_kmeans(image_path,k):
     kmeans_image_output, kmeans_segmented_image_output,_,kmeans_threshold_text=generate_kmeans_segmented_image(image_path, k)
