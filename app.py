@@ -6,7 +6,7 @@ from experiments.kmeans_segmenter import generate_kmeans_segmented_image
 from experiments.enhanced_kmeans_segmenter import slic_kmeans
 from experiments.watershed_segmenter import generate_watershed
 from experiments.felzenszwalb_segmentation import segment
-from experiments.SegNet.architecture import SegNetEfficientNet, NUM_CLASSES, DEVICE, IMAGE_SIZE
+from experiments.SegNet.efficient_b0_backbone.architecture import SegNetEfficientNet, NUM_CLASSES, DEVICE, IMAGE_SIZE
 import numpy as np
 from PIL import Image
 from matplotlib import cm
