@@ -8,6 +8,7 @@ from experiments.watershed_segmenter import generate_watershed
 from experiments.felzenszwalb_segmentation import segment
 from experiments.SegNet.efficient_b0_backbone.architecture import SegNetEfficientNet, NUM_CLASSES, DEVICE, IMAGE_SIZE
 from experiments.SegNet.vgg_backbone.model import SegNet
+from experiments.ensemble_method import generate_ensemble_segmentation
 import numpy as np
 from PIL import Image
 from matplotlib import cm
@@ -228,6 +229,25 @@ with gr.Blocks() as demo:
                 inputs=[segnet_file_input],
                 outputs=[segnet_image_output,segnet_segmented_image_output]
         )
+        # In app.py
+        with gr.TabItem("Ensemble Segmentation"):
+            with gr.Row():
+                with gr.Column(scale=1):
+                    ensemble_file_input = gr.File(label="Upload Image File")
+                    boundary_weight = gr.Slider(minimum=0, maximum=1, value=0.3, step=0.05, 
+                                                label="Boundary Refinement Weight")
+                    ensemble_display_btn = gr.Button("Segment with Ensemble Method")
+                
+                with gr.Column(scale=2):
+                    ensemble_image_output = gr.Image(label="Original Image", container=False)
+                    ensemble_segmented_output = gr.Image(label="Ensemble Segmentation", container=False)
+                    ensemble_comparison = gr.Image(label="Method Comparison", container=False)
+            
+            ensemble_display_btn.click(
+                fn=generate_ensemble_segmentation,
+                inputs=[ensemble_file_input, boundary_weight],
+                outputs=[ensemble_image_output, ensemble_segmented_output, ensemble_comparison]
+            )
 if __name__ == "__main__":
     demo.launch()
 
