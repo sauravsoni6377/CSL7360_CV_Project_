@@ -212,21 +212,22 @@ with gr.Blocks() as demo:
                 outputs=[slic_image_output,slic_segmented_image_output]
         )
             
-        with gr.TabItem("Watershed Algorithm Segmentation"):
+        with gr.TabItem("Watershed"):
             with gr.Row():
                 with gr.Column(scale=1):
-                    watershed_file_input = gr.File(label="Upload Image File")
-                    watershed_display_btn = gr.Button("Segment this image")
-                
+                    watershed_file = gr.File(label="Upload Image")
+                    watershed_btn = gr.Button("Run Watershed")
+               
                 with gr.Column(scale=2):
-                    watershed_image_output = gr.Image(label="Original Image",container=True)
-                    watershed_segmented_image_output = gr.Image(label="watershed Segmented Image",container=True)
-            
-            watershed_display_btn.click(
+                    original_img = gr.Image(label="1. Original")
+                    blurred_img = gr.Image(label="2. Blurred")
+                    threshold_img = gr.Image(label="3. Threshold")
+
+            watershed_btn.click(
                 fn=generate_watershed,
-                inputs=[watershed_file_input],
-                outputs=[watershed_image_output,watershed_segmented_image_output]
-        )
+                inputs=[watershed_file],
+                outputs=[original_img, blurred_img, threshold_img]
+            )
         with gr.TabItem("Felzenszwalb Algorithm Segmentation"):
             with gr.Row():
                 with gr.Column(scale=1):
