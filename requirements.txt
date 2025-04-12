@@ -8,3 +8,4 @@ matplotlib==3.10.0
 wandb==0.19.6
 tqdm==4.67.1
 gdown==5.2.0
+opendatasets==0.1.22
