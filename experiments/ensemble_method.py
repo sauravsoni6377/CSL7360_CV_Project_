@@ -142,7 +142,7 @@ def generate_ensemble_segmentation(image_path, boundary_weight=0.3):
     """Wrapper for Gradio interface"""
     original, ensemble_result, comparison = ensemble_segmentation(
         image_path, 
-        model_path="segnet_efficientnet_voc.pth",
+        model_path="saved_models/segnet_efficientnet_camvid.pth",
         boundary_weight=boundary_weight
     )
     return original, ensemble_result, comparison

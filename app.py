@@ -8,7 +8,7 @@ from experiments.watershed_segmenter import generate_watershed
 from experiments.felzenszwalb_segmentation import segment
 from experiments.SegNet.efficient_b0_backbone.architecture import SegNetEfficientNet, NUM_CLASSES, DEVICE
 from experiments.SegNet.vgg_backbone.model import SegNet
-from experiments.ensemble_method import generate_ensemble_segmentation
+# from experiments.ensemble_method import generate_ensemble_segmentation
 import numpy as np
 from PIL import Image
 from matplotlib import cm
@@ -108,6 +108,52 @@ def SegNet_efficient_b0(image_path):
     mask_pil = Image.fromarray(colored_mask)
 
     return original_image_resized, mask_pil
+
+def ensemble_segmentation(image_path):
+    """
+    Ensemble segmentation combining SegNet and Otsu,
+    assuming Otsu produces a mask with the foreground as black (value 0)
+    and background as white (value 255).
+
+    In this ensemble, we force the SegNet prediction to background (class 0)
+    where Otsu indicates background (after inversion, i.e., where otsu_bin==0).
+
+    Parameters:
+        image_path (str): Path to the input image.
+        
+    Returns:
+        original_image: The original resized image used for segmentation.
+        segnet_mask_pil: SegNet multi-class segmentation output (PIL image).
+        otsu_mask_pil: The original Otsu binary segmentation mask (PIL image).
+        ensemble_mask_pil: Final ensemble segmentation mask (PIL image).
+    """
+    # Run SegNet segmentation (model outputs a multi-class mask).
+    segnet_orig, segnet_mask_pil = SegNet_efficient_b0(image_path)
+    # Convert SegNet output to a NumPy array (assumed grayscale labeling, e.g., background=0).
+    segnet_mask_np = np.array(segnet_mask_pil.convert("L"))
+
+    # Run Otsu segmentation. (generate_segmented_image returns several outputs.)
+    _, otsu_segmented_pil, _, _, _ = generate_segmented_image(image_path)
+    
+    # Resize Otsu mask to match SegNet output shape, e.g., (480, 360) if SegNet works in that resolution.
+    resized_shape = (segnet_mask_np.shape[1], segnet_mask_np.shape[0])
+    otsu_mask_resized = otsu_segmented_pil.resize(resized_shape, Image.NEAREST)
+    otsu_mask_np = np.array(otsu_mask_resized)
+    
+    # Invert Otsu's binary mask:
+    # Assuming that in otsu_mask_np, foreground is black (0) and background is white (255),
+    # we build a binary mask where "1" represents the object's area.
+    otsu_bin = (otsu_mask_np == 0).astype(np.uint8)  # Now, foreground is 1 and background is 0.
+    
+    # Create the ensemble segmentation:
+    # Where Otsu indicates foreground (otsu_bin==1), keep SegNet's prediction;
+    # where Otsu is background (otsu_bin==0), force it to background class (0).
+    ensemble_seg = np.where(otsu_bin == 1, segnet_mask_np, 0)
+    
+    # Convert back to a PIL image.
+    ensemble_mask_pil = Image.fromarray(ensemble_seg.astype(np.uint8))
+    
+    return segnet_orig, segnet_mask_pil, otsu_segmented_pil, ensemble_mask_pil
 
 with gr.Blocks() as demo:
     gr.Markdown("# Image Segmentation using Classical CV")
@@ -234,20 +280,20 @@ with gr.Blocks() as demo:
             with gr.Row():
                 with gr.Column(scale=1):
                     ensemble_file_input = gr.File(label="Upload Image File")
-                    boundary_weight = gr.Slider(minimum=0, maximum=1, value=0.3, step=0.05, 
-                                                label="Boundary Refinement Weight")
                     ensemble_display_btn = gr.Button("Segment with Ensemble Method")
                 
                 with gr.Column(scale=2):
                     ensemble_image_output = gr.Image(label="Original Image")
-                    ensemble_segmented_output = gr.Image(label="Ensemble Segmentation")
-                    ensemble_comparison = gr.Image(label="Method Comparison")
+                    ensemble_mask = gr.Image(label="Ensemble Segmented Image")
+                    ensemble_segnet_segmented_output = gr.Image(label="SegNet Efficient B0 Segmented Image")
+                    ensemble_otsu_segmented_output = gr.Image(label="Otsu Segmented Image")
             
             ensemble_display_btn.click(
-                fn=generate_ensemble_segmentation,
-                inputs=[ensemble_file_input, boundary_weight],
-                outputs=[ensemble_image_output, ensemble_segmented_output, ensemble_comparison]
+                fn=ensemble_segmentation,
+                inputs=[ensemble_file_input],
+                outputs=[ensemble_image_output, ensemble_segnet_segmented_output, ensemble_otsu_segmented_output, ensemble_mask]
             )
+
 if __name__ == "__main__":
     demo.launch()
 
