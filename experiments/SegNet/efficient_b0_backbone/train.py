@@ -76,6 +76,6 @@ for epoch in tqdm(range(EPOCHS)):
 
     print(f"Epoch [{epoch+1}/{EPOCHS}] Train Loss: {train_loss:.4f}, Val Loss: {val_loss:.4f}, Acc: {val_acc:.4f}")
 
-torch.save(model.state_dict(), "segnet_efficientnet_voc.pth")
+torch.save(model.state_dict(), "segnet_efficientnet_camvid.pth")
 # wandb.finish()
 

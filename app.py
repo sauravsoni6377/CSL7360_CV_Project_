@@ -6,7 +6,7 @@ from experiments.kmeans_segmenter import generate_kmeans_segmented_image
 from experiments.enhanced_kmeans_segmenter import slic_kmeans
 from experiments.watershed_segmenter import generate_watershed
 from experiments.felzenszwalb_segmentation import segment
-from experiments.SegNet.efficient_b0_backbone.architecture import SegNetEfficientNet, NUM_CLASSES, DEVICE, IMAGE_SIZE
+from experiments.SegNet.efficient_b0_backbone.architecture import SegNetEfficientNet, NUM_CLASSES, DEVICE
 from experiments.SegNet.vgg_backbone.model import SegNet
 from experiments.ensemble_method import generate_ensemble_segmentation
 import numpy as np
@@ -82,14 +82,14 @@ def generate_felzenszwalb(image_path, sigma, k, min_size_factor):
 
 def SegNet_efficient_b0(image_path):
     model = SegNetEfficientNet(NUM_CLASSES).to(DEVICE)
-    model.load_state_dict(torch.load("segnet_efficientnet_voc.pth", map_location=DEVICE))
+    model.load_state_dict(torch.load("saved_models/segnet_efficientnet_camvid.pth", map_location=DEVICE))
     model.eval()
     transform = transforms.Compose([
-        transforms.Resize(IMAGE_SIZE),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406],
-                             [0.229, 0.224, 0.225])
-    ])
+    transforms.Resize((360, 480)),  # Or larger if needed
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                         std=[0.229, 0.224, 0.225])
+])
 
     image = Image.open(image_path).convert("RGB")
     input_tensor = transform(image).unsqueeze(0).to(DEVICE)
@@ -99,7 +99,7 @@ def SegNet_efficient_b0(image_path):
         pred_mask = torch.argmax(output, dim=1).squeeze(0).cpu().numpy()
 
     # Convert original image for Gradio display
-    original_image_resized = image.resize(IMAGE_SIZE)
+    original_image_resized = image
 
     # Convert predicted mask to a color image using a colormap
     colormap = cm.get_cmap('nipy_spectral')
@@ -121,10 +121,10 @@ with gr.Blocks() as demo:
                     threshold_text = gr.Textbox(label="Threshold Comparison", value="", interactive=False)
                 
                 with gr.Column(scale=2):
-                    image_output = gr.Image(label="Original Image", container=False)
-                    histogram_output = gr.Image(label="Histogram", container=False)
-                    segmented_image_output = gr.Image(label="Our Segmented Image", container=False)
-                    opencv_segmented_image_output = gr.Image(label="OpenCV Segmented Image", container=False)
+                    image_output = gr.Image(label="Original Image")
+                    histogram_output = gr.Image(label="Histogram")
+                    segmented_image_output = gr.Image(label="Our Segmented Image")
+                    opencv_segmented_image_output = gr.Image(label="OpenCV Segmented Image")
             display_btn.click(
                 fn=generate_segmented_image,
                 inputs=file_input,
@@ -139,8 +139,8 @@ with gr.Blocks() as demo:
                     kmeans_threshold_text = gr.Textbox(label="K-means Info", value="", interactive=False)
                 
                 with gr.Column(scale=2):
-                    kmeans_image_output = gr.Image(label="Original Image", container=False)
-                    kmeans_segmented_image_output = gr.Image(label="K-means Segmented Image", container=False)
+                    kmeans_image_output = gr.Image(label="Original Image")
+                    kmeans_segmented_image_output = gr.Image(label="K-means Segmented Image")
             
             kmeans_display_btn.click(
                 fn=generate_kmeans,
@@ -157,8 +157,8 @@ with gr.Blocks() as demo:
                     slic_display_btn = gr.Button("Segment this image")
                 
                 with gr.Column(scale=2):
-                    slic_image_output = gr.Image(label="Original Image", container=False)
-                    slic_segmented_image_output = gr.Image(label="SLIC Segmented Image", container=False)
+                    slic_image_output = gr.Image(label="Original Image",container=True)
+                    slic_segmented_image_output = gr.Image(label="SLIC Segmented Image",container=True)
             
             slic_display_btn.click(
                 fn=generate_slic,
@@ -173,8 +173,8 @@ with gr.Blocks() as demo:
                     watershed_display_btn = gr.Button("Segment this image")
                 
                 with gr.Column(scale=2):
-                    watershed_image_output = gr.Image(label="Original Image", container=False)
-                    watershed_segmented_image_output = gr.Image(label="watershed Segmented Image", container=False)
+                    watershed_image_output = gr.Image(label="Original Image",container=True)
+                    watershed_segmented_image_output = gr.Image(label="watershed Segmented Image",container=True)
             
             watershed_display_btn.click(
                 fn=generate_watershed,
@@ -191,8 +191,8 @@ with gr.Blocks() as demo:
                     felzenszwalb_display_btn = gr.Button("Segment this image")
                 
                 with gr.Column(scale=2):
-                    felzenszwalb_image_output = gr.Image(label="Original Image", container=False)
-                    felzenszwalb_segmented_image_output = gr.Image(label="felzenszwalb Segmented Image", container=False)
+                    felzenszwalb_image_output = gr.Image(label="Original Image",container=True)
+                    felzenszwalb_segmented_image_output = gr.Image(label="felzenszwalb Segmented Image",container=True)
             
             felzenszwalb_display_btn.click(
                 fn=generate_felzenszwalb,
@@ -206,8 +206,8 @@ with gr.Blocks() as demo:
                     segnet_display_btn = gr.Button("Segment this image")
                 
                 with gr.Column(scale=2):
-                    segnet_image_output = gr.Image(label="Original Image", container=False)
-                    segnet_segmented_image_output = gr.Image(label="SegNet Segmented Image", container=False)
+                    segnet_image_output = gr.Image(label="Original Image")
+                    segnet_segmented_image_output = gr.Image(label="SegNet Segmented Image")
             
             segnet_display_btn.click(
                 fn=SegNet_efficient_b0,
@@ -221,8 +221,8 @@ with gr.Blocks() as demo:
                     segnet_display_btn = gr.Button("Segment this image")
                 
                 with gr.Column(scale=2):
-                    segnet_image_output = gr.Image(label="Original Image", container=False)
-                    segnet_segmented_image_output = gr.Image(label="SegNet VGG Segmented Image", container=False)
+                    segnet_image_output = gr.Image(label="Original Image")
+                    segnet_segmented_image_output = gr.Image(label="SegNet VGG Segmented Image")
             
             segnet_display_btn.click(
                 fn=generate_segnet_vgg,
@@ -239,9 +239,9 @@ with gr.Blocks() as demo:
                     ensemble_display_btn = gr.Button("Segment with Ensemble Method")
                 
                 with gr.Column(scale=2):
-                    ensemble_image_output = gr.Image(label="Original Image", container=False)
-                    ensemble_segmented_output = gr.Image(label="Ensemble Segmentation", container=False)
-                    ensemble_comparison = gr.Image(label="Method Comparison", container=False)
+                    ensemble_image_output = gr.Image(label="Original Image")
+                    ensemble_segmented_output = gr.Image(label="Ensemble Segmentation")
+                    ensemble_comparison = gr.Image(label="Method Comparison")
             
             ensemble_display_btn.click(
                 fn=generate_ensemble_segmentation,

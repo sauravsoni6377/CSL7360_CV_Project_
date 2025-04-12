@@ -4,7 +4,7 @@ from PIL import Image
 import cv2
 from torchvision import transforms
 from experiments.otsu_segmenter import otsu_threshold
-from experiments.SegNet.efficient_b0_backbone.architecture import SegNetEfficientNet, NUM_CLASSES, DEVICE, IMAGE_SIZE
+from experiments.SegNet.efficient_b0_backbone.architecture import SegNetEfficientNet, NUM_CLASSES, DEVICE
 
 def ensemble_segmentation(image_path, model_path="segnet_efficientnet_voc.pth", boundary_weight=0.3):
     """
@@ -38,10 +38,11 @@ def ensemble_segmentation(image_path, model_path="segnet_efficientnet_voc.pth", 
     model.eval()
     
     transform = transforms.Compose([
-        transforms.Resize(IMAGE_SIZE),
-        transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
-    ])
+    transforms.Resize((360, 480)),  # Or larger if needed
+    transforms.ToTensor(),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                         std=[0.229, 0.224, 0.225])
+])
     
     input_tensor = transform(image).unsqueeze(0).to(DEVICE)
     
