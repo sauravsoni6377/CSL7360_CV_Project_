@@ -3,6 +3,8 @@
 ## Overview
 This project implements a comprehensive image segmentation toolkit that combines classical computer vision techniques with deep learning-based approaches. The application provides an interactive interface to compare different segmentation algorithms on user-provided images.
 
+Our Gradio web Demo: https://huggingface.co/spaces/AJain1234/Image_Segmentation_ 
+
 ## Features
 - **Classical Segmentation Methods**:
   - Otsu's Thresholding: Optimal global thresholding for binary segmentation
